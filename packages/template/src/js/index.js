@@ -7,10 +7,7 @@ import {
   sRGBEncoding,
   GridHelper,
 } from "three";
-import { VRButton } from "three/examples/jsm/webxr/VRButton";
-import { Controller } from "../components/controller";
 import { addDesktopControls } from "../components/desktop-controls";
-import { DebuggerComponent } from "../utils";
 
 const GLOBALS = {};
 
@@ -44,51 +41,12 @@ function init() {
   renderer.outputEncoding = sRGBEncoding;
 
   const { orbitControls } = addDesktopControls(camera, renderer);
-  const consoleOne = new DebuggerComponent();
-
-  const consoleTwo = new DebuggerComponent();
-
-  const controllerOne = new Controller({
-    renderer,
-    index: 0,
-    onSelect,
-    onSelectEnd,
-    onConnectedCb: () => {
-      scene.add(controllerOne.controllerGroup);
-      controllerOne.controllerGroup.add(consoleOne.consolePanel);
-      consoleOne.log("hello\n Controller one connected");
-    },
-    onDisconnectedCb: () => {
-      controllerOne.controllerGroup.remove(consoleTwo.consolePanel);
-      scene.remove(controllerOne.controllerGroup);
-    },
-  });
-  const controllerTwo = new Controller({
-    renderer,
-    index: 1,
-    onSelect,
-    onSelectEnd,
-    onConnectedCb: () => {
-      scene.add(controllerTwo.controllerGroup);
-      controllerTwo.controllerGroup.add(consoleTwo.consolePanel);
-      consoleTwo.log("hello\n Controller Two connected");
-    },
-    onDisconnectedCb: () => {
-      controllerTwo.controllerGroup.remove(consoleTwo.consolePanel);
-      scene.remove(controllerTwo.controllerGroup);
-    },
-  });
-
-  document.body.appendChild(VRButton.createButton(renderer));
-
   GLOBALS.camera = camera;
   GLOBALS.renderer = renderer;
   GLOBALS.scene = scene;
-  GLOBALS.ctrl1 = controllerOne;
-  GLOBALS.ctrl2 = controllerTwo;
+
   GLOBALS.orbitControls = orbitControls;
-  GLOBALS.consoleOne = consoleOne;
-  GLOBALS.consoleTwo = consoleTwo;
+
   renderer.setAnimationLoop(update);
 }
 
@@ -96,16 +54,6 @@ function update() {
   const { camera, scene, renderer, orbitControls } = GLOBALS;
   orbitControls.update();
   renderer.render(scene, camera);
-}
-
-function onSelect(event) {
-  GLOBALS.consoleOne.log("selected");
-  console.log(event);
-}
-
-function onSelectEnd(event) {
-  GLOBALS.consoleOne.log("");
-  console.log(event);
 }
 
 function onResize() {

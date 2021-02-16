@@ -9,7 +9,7 @@ module.exports = {
   mode: "development",
   devServer: {
     port: 8000,
-    contentBase: path.join(__dirname, "dist"),
+    contentBase: path.resolve(__dirname, "dist"),
   },
   module: {
     rules: [
