@@ -7,6 +7,7 @@ import {
   sRGBEncoding,
   GridHelper,
 } from "three";
+import { GUI } from "dat.gui";
 import { addDesktopControls } from "../components/desktop-controls";
 
 class Sketch {
@@ -49,6 +50,7 @@ class Sketch {
     this.scene = scene;
 
     this.orbitControls = orbitControls;
+    this.debugGUI = new GUI();
 
     renderer.setAnimationLoop(this.update);
   };
