@@ -1,61 +1,33 @@
-import {
-  AdditiveBlending,
-  CanvasTexture,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneBufferGeometry,
-} from "three";
+import { random } from "lodash";
+import { Color } from "three";
+/**
+ * Colors
+ */
 
-export class DebuggerComponent {
-  constructor() {
-    this.canvasEl = document.createElement("canvas");
-    this.init();
-  }
+export const FLAT_COLORS = {
+  TURQOISE: 0x1abc9c,
+  EMERALD: 0x2ecc71,
+  PETER_RIVER: 0x3498db,
+  AMETHYST: 0x9b59b6,
+  WETASPHALT: 0x34495e,
+  GREENSEA: 0x16a085,
+  NEPHRITIS: 0x27ae60,
+  BELIZEHOLE: 0x2980b9,
+  WISTERIA: 0x8e44ad,
+  MIDNIGHT_BLUE: 0x2c3e50,
+  SUNFLOWER: 0xf1c40f,
+  CARROT: 0xe67e22,
+  ALIZAIN: 0xe74c3c,
+  CLOUDS: 0xecf0f1,
+  CONCRETE: 0x95a5a6,
+  ORANGE: 0xf39c12,
+  PUMPKIN: 0xd35400,
+  POMEGRANATE: 0xc0392b,
+  SILVER: 0xbdc3c7,
+  ASBESTOS: 0x7f8c8d,
+};
 
-  init = () => {
-    this.canvasEl.width = 1024;
-    this.canvasEl.height = 1024;
-    this.canvasTexture = new CanvasTexture(this.canvasEl);
-    this.canvasContext = this.canvasEl.getContext("2d");
-    this.consolePanelGeom = new PlaneBufferGeometry(
-      (0.3 * this.canvasEl.width) / 1024,
-      (0.3 * this.canvasEl.height) / 1024
-    );
-    this.consolePanelMat = new MeshBasicMaterial({
-      map: this.canvasTexture,
-      blending: AdditiveBlending,
-      transparent: true,
-    });
-    this.consolePanel = new Mesh(this.consolePanelGeom, this.consolePanelMat);
-    this.consolePanel.renderOrder = 1;
-  };
-
-  log = (text) => {
-    if (typeof text !== "string") {
-      text = JSON.stringify(text, null, 2);
-    }
-    this.canvasContext.font = "120px Verdana";
-    this.canvasContext.fillStyle = "black";
-    this.canvasContext.fillRect(
-      0,
-      0,
-      this.canvasEl.width,
-      this.canvasEl.height
-    );
-    this.canvasContext.fillStyle = "white";
-    let y = 1;
-    text
-      .split("")
-      .map((el, i) => {
-        if (i > 16 * y) {
-          y++;
-          return (el = el + "-\n");
-        }
-        return el;
-      })
-      .join("")
-      .split("\n")
-      .forEach((str, i) => this.canvasContext.fillText(str, 0, (i + 1) * 120));
-    this.canvasTexture.needsUpdate = true;
-  };
-}
+export const generateRandomColor = () => {
+  const randomColor = `hsl(${random(0, 360)},${random(25, 100)}%, 35%)`;
+  return new Color(randomColor);
+};
