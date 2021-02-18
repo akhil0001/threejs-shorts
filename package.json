@@ -4,7 +4,7 @@
   "main": "index.js",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "shorts/*"
   ],
   "repository": "https://github.com/akhil0001/webxr-three-template.git",
   "author": "Akhil Sai Ram <akhilsairammaruti@gmail.com>",
