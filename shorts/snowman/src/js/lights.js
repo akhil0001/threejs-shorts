@@ -3,8 +3,8 @@ import { FLAT_COLORS } from "./utils";
 
 export function addLights({ scene }) {
   const lights = {};
-  const ambientLight = new AmbientLight(FLAT_COLORS.CLOUDS, 0.8);
-  const directionalLight = new DirectionalLight(FLAT_COLORS.CONCRETE, 0.8);
+  const ambientLight = new AmbientLight(FLAT_COLORS.WHITE, 0.8);
+  const directionalLight = new DirectionalLight(FLAT_COLORS.CLOUDS, 0.8);
   directionalLight.position.set(-1, 10, -10);
   directionalLight.castShadow = true;
 

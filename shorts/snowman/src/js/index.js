@@ -8,9 +8,8 @@ import {
   PlaneBufferGeometry,
   MeshLambertMaterial,
   Mesh,
+  Vector3,
 } from "three";
-import { GUI } from "dat.gui";
-import { addDesktopControls } from "../components/desktop-controls";
 import { SnowMan } from "./objects";
 import { FLAT_COLORS } from "./utils";
 import { addLights } from "./lights";
@@ -28,7 +27,6 @@ class Sketch {
     const aspectRatio = window.innerWidth / window.innerHeight;
 
     const camera = new PerspectiveCamera(50, aspectRatio, 0.1, 50);
-    camera.position.set(0, 1.6, 3);
     scene.add(camera);
 
     const renderer = new WebGLRenderer({
@@ -41,13 +39,10 @@ class Sketch {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
 
-    const { orbitControls } = addDesktopControls(camera, renderer);
     this.camera = camera;
     this.renderer = renderer;
     this.scene = scene;
 
-    this.orbitControls = orbitControls;
-    this.debugGUI = new GUI();
     /**
      * lights
      */
@@ -64,6 +59,7 @@ class Sketch {
 
     addFloor({ scene: this.scene });
     this.camera.position.set(-2.5, 2.5, 3);
+    this.camera.lookAt(new Vector3(0, 0, 0));
     renderer.setAnimationLoop(this.update);
   };
 
@@ -76,7 +72,6 @@ class Sketch {
   };
 
   update = () => {
-    this.orbitControls.update();
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -91,7 +86,7 @@ class Sketch {
 function addFloor({ scene }) {
   const floorGeom = new PlaneBufferGeometry(100, 100);
   const floorMat = new MeshLambertMaterial({
-    color: FLAT_COLORS.PETER_RIVER,
+    color: FLAT_COLORS.BELIZEHOLE,
   });
   const floor = new Mesh(floorGeom, floorMat);
   floor.receiveShadow = true;

@@ -84,31 +84,6 @@ class Hands extends Group {
   };
 }
 
-export class SnowMan extends Group {
-  constructor({ onComplete }) {
-    super();
-    this.onComplete = onComplete;
-    this.init();
-  }
-
-  init = () => {
-    this.base = new Base({
-      position: new Vector3(0, 0, 0),
-    });
-    this.add(this.base);
-    anime({
-      targets: this.base.position,
-      x: -5,
-      duration: 3000,
-      delay: 4000,
-      easing: "easeInBack",
-      complete: () => {
-        this.onComplete();
-      },
-    });
-  };
-}
-
 class Cap extends Mesh {
   constructor({ position }) {
     super(capBaseGeom, capBaseMat);
@@ -274,6 +249,31 @@ class Base extends Mesh {
       y: 1,
       duration: 300,
       easing: "linear",
+    });
+  };
+}
+
+export class SnowMan extends Group {
+  constructor({ onComplete }) {
+    super();
+    this.onComplete = onComplete;
+    this.init();
+  }
+
+  init = () => {
+    this.base = new Base({
+      position: new Vector3(0, 0, 0),
+    });
+    this.add(this.base);
+    anime({
+      targets: this.base.position,
+      x: -5,
+      duration: 3000,
+      delay: 4000,
+      easing: "easeInBack",
+      complete: () => {
+        this.onComplete();
+      },
     });
   };
 }
