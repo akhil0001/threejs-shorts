@@ -1,21 +1,21 @@
-import {
-  Scene,
-  Color,
-  PerspectiveCamera,
-  WebGLRenderer,
-  sRGBEncoding,
-  GridHelper,
-  Vector2,
-  PlaneBufferGeometry,
-  Mesh,
-  ShaderMaterial,
-  DoubleSide,
-  Clock,
-} from "three";
 import { GUI } from "dat.gui";
-import vertexShader from "../shaders/hello-world.vert";
-import fragmentShader from "../shaders/hello-world.frag";
+import {
+  Clock,
+  Color,
+  DoubleSide,
+  GridHelper,
+  Mesh,
+  PerspectiveCamera,
+  PlaneBufferGeometry,
+  Scene,
+  ShaderMaterial,
+  sRGBEncoding,
+  Vector2,
+  WebGLRenderer,
+} from "three";
 import { addDesktopControls } from "../components/desktop-controls";
+import fragmentShader from "../shaders/hello-world.frag";
+import vertexShader from "../shaders/hello-world.vert";
 import { GLSL_TYPES } from "./glsl-types";
 
 class Sketch {
@@ -77,7 +77,6 @@ class Sketch {
 
   addShaderPlane = () => {
     const shaderPlaneGeom = new PlaneBufferGeometry(2, 2);
-    console.log({ fragmentShader, vertexShader });
     const shaderMat = new ShaderMaterial({
       uniforms: this.uniforms,
       fragmentShader,
