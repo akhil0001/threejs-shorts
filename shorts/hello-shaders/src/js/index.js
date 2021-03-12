@@ -7,12 +7,13 @@ import {
   GridHelper,
   Vector2,
   PlaneBufferGeometry,
-  MeshBasicMaterial,
   Mesh,
-  DoubleSide,
   ShaderMaterial,
+  DoubleSide,
 } from "three";
 import { GUI } from "dat.gui";
+import vertexShader from "../shaders/hello-world.vert";
+import fragmentShader from "../shaders/hello-world.frag";
 import { addDesktopControls } from "../components/desktop-controls";
 import { GLSL_TYPES } from "./glsl-types";
 
@@ -50,6 +51,7 @@ class Sketch {
     this.camera = camera;
     this.renderer = renderer;
     this.scene = scene;
+    this.initUniforms();
     this.addShaderPlane();
     orbitControls.enableDamping = true;
     this.orbitControls = orbitControls;
@@ -67,14 +69,12 @@ class Sketch {
 
   addShaderPlane = () => {
     const shaderPlaneGeom = new PlaneBufferGeometry(2, 2);
-    // const shaderPlaneMat = new MeshBasicMaterial({
-    //   color: 0xf0f0f0,
-    //   side: DoubleSide,
-    // });
-    const shaderMat = ShaderMaterial({
+    console.log({ fragmentShader, vertexShader });
+    const shaderMat = new ShaderMaterial({
       uniforms: this.uniforms,
-      vertexShader: document.getElementById("vertexShader").textContent,
-      fragmentShader: document.getElementById("fragmentShader").textContent,
+      fragmentShader,
+      // vertexShader,
+      side: DoubleSide,
     });
     this.shaderPlane = new Mesh(shaderPlaneGeom, shaderMat);
     this.scene.add(this.shaderPlane);
