@@ -10,6 +10,7 @@ import {
   Mesh,
   ShaderMaterial,
   DoubleSide,
+  Clock,
 } from "three";
 import { GUI } from "dat.gui";
 import vertexShader from "../shaders/hello-world.vert";
@@ -51,6 +52,7 @@ class Sketch {
     this.camera = camera;
     this.renderer = renderer;
     this.scene = scene;
+    this.clock = new Clock();
     this.initUniforms();
     this.addShaderPlane();
     orbitControls.enableDamping = true;
@@ -63,7 +65,13 @@ class Sketch {
   initUniforms = () => {
     this.uniforms = {
       u_time: { type: GLSL_TYPES.FLOAT, value: 1.0 },
-      u_resolution: { type: GLSL_TYPES.VECTOR2, value: new Vector2() },
+      u_resolution: {
+        type: GLSL_TYPES.VECTOR2,
+        value: new Vector2(
+          this.renderer.domElement.width,
+          this.renderer.domElement.height
+        ),
+      },
     };
   };
 
@@ -82,6 +90,7 @@ class Sketch {
 
   update = () => {
     this.orbitControls.update();
+    this.uniforms.u_time.value = this.clock.getElapsedTime();
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -89,6 +98,7 @@ class Sketch {
     const aspectRatio = width / height;
     this.camera.aspect = aspectRatio;
     this.camera.updateProjectionMatrix();
+    this.uniforms.u_resolution.value.set(width, height);
     this.renderer.setSize(width, height);
   };
 }
