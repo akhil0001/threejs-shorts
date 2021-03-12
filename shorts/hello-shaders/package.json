@@ -1,9 +1,13 @@
 {
-  "name": "template",
+  "name": "hello-shaders",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
     "start": "webpack serve --config webpack/webpack.config.dev.js"
+  },
+  "devDependencies": {
+    "glslify-loader": "^2.0.0",
+    "raw-loader": "^4.0.2"
   }
 }
