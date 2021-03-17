@@ -6088,6 +6088,11 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
+three-csg-ts@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/three-csg-ts/-/three-csg-ts-2.2.2.tgz#8b3bc0619bf1a28414708989ef39a0c2b606b0cc"
+  integrity sha512-3TMwuET4OvmpRaNAS0rB8DiI2kYHyYFo4JCSbzhOrnKfbUUQHv0PnOndSK3A+J09HTzHeJy1zVAAYOPk3TRkVw==
+
 three@^0.125.2:
   version "0.125.2"
   resolved "https://registry.yarnpkg.com/three/-/three-0.125.2.tgz#dcba12749a2eb41522e15212b919cd3fbf729b12"
