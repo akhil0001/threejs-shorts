@@ -7,17 +7,16 @@ import {
   GridHelper,
   OrthographicCamera,
   AxesHelper,
+  BoxBufferGeometry,
+  Mesh,
+  MeshBasicMaterial,
   Vector3,
 } from "three";
+import * as CANNON from "cannon-es";
 import { GUI } from "dat.gui";
 import { addDesktopControls } from "../components/desktop-controls";
-import { Chicken, DIRECTION_KEYS } from "../characters/chicken";
-import { Lane, LANE_DEPTH, LANE_TYPES } from "../characters/lane";
-import { inRange, isEmpty, isNil } from "lodash";
-
-const NUM_LANES_TO_BE = 8;
-let NUM_LANES_GENERATED = 0;
-const MIN_LANES_FOR_GENERATION = 5;
+import { Chicken } from "../characters/chicken";
+import cannonDebugger from "cannon-es-debugger";
 
 class Sketch {
   constructor({ canvasEl }) {
@@ -60,6 +59,7 @@ class Sketch {
     renderer.xr.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputEncoding = sRGBEncoding;
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     const { orbitControls } = addDesktopControls(camera, renderer);
     this.camera = camera;
@@ -68,31 +68,80 @@ class Sketch {
 
     this.orbitControls = orbitControls;
     this.debugGUI = new GUI();
-
+    this.initPhysics();
+    this.addPhysicsMaterial();
+    this.addGround();
     this.chicken = new Chicken({
       camera,
       aspectRatio,
+      world: this.world,
       onChickenJump: this.onChickenJump,
     });
-
-    this.currentLaneOfDuck = -1;
-    this.lanes = [];
-    this.generateLanes();
-
+    this.addLane();
+    cannonDebugger(this.scene, this.world.bodies);
     this.scene.add(this.chicken);
+    this.waterLog.body.material = this.physicsMaterial;
     renderer.setAnimationLoop(this.update);
   };
 
+  addPhysicsMaterial = () => {
+    this.physicsMaterial = new CANNON.Material("physics");
+    const physicsContactMaterial = new CANNON.ContactMaterial(
+      this.physicsMaterial,
+      this.physicsMaterial,
+      {
+        friction: 10,
+        restitution: 0,
+        frictionEquationRelaxation: 10,
+      }
+    );
+    this.world.addContactMaterial(physicsContactMaterial);
+  };
+
+  addGround = () => {
+    const groundShape = new CANNON.Plane();
+    const groundBody = new CANNON.Body({
+      mass: 0,
+      material: this.physicsMaterial,
+    });
+    groundBody.addShape(groundShape);
+    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    groundBody.name = "ground";
+    this.world.addBody(groundBody);
+  };
+
+  addLane = () => {
+    const waterLanePos = new Vector3(0, 0, -10);
+    this.waterLane = new WaterLane();
+    this.waterLane.position.copy(waterLanePos);
+    this.scene.add(this.waterLane);
+    this.addWaterLog();
+  };
+
+  addWaterLog = () => {
+    this.waterLog = new WaterLog();
+    this.waterLog.position.set(0, 0.5, -8);
+    this.waterLog.body.position.copy(this.waterLog.position);
+    this.scene.add(this.waterLog);
+    this.world.addBody(this.waterLog.body);
+  };
+
+  initPhysics = () => {
+    this.world = new CANNON.World();
+    this.world.gravity.set(0, -10, 0);
+    this.world.defaultContactMaterial.contactEquationStiffness = 1e7;
+
+    // Stabilization time in number of timesteps
+    this.world.defaultContactMaterial.contactEquationRelaxation = 4;
+  };
+
   update = () => {
+    this.world.step(1 / 60);
+    // this.chicken.chickenBody.position.copy(this.chicken.position);
+    this.chicken.position.copy(this.chicken.chickenBody.position);
+    this.chicken.quaternion.copy(this.chicken.chickenBody.quaternion);
     this.orbitControls.update();
     this.camera.lookAt(this.chicken.position);
-    if (
-      this.currentLaneOfDuck >=
-      NUM_LANES_GENERATED - MIN_LANES_FOR_GENERATION
-    ) {
-      this.generateLanes();
-    }
-
     this.renderer.render(this.scene, this.camera);
   };
 
@@ -106,47 +155,12 @@ class Sketch {
     this.renderer.setSize(width, height);
   };
 
-  onChickenJump = (direction) => {
-    if ([DIRECTION_KEYS.LEFT, DIRECTION_KEYS.RIGHT].includes(direction)) {
-      return false;
-    }
-    if (DIRECTION_KEYS.UP === direction) {
-      this.currentLaneOfDuck++;
-    } else {
-      this.currentLaneOfDuck--;
-    }
-    // console.log(this.currentLaneOfDuck);
-    // this.chicken.position.setZ(0);
-    console.log(this.lanes[this.currentLaneOfDuck].logs);
-    const intersects = this.lanes[this.currentLaneOfDuck].logs.filter((log) => {
-      const flag = inRange(
-        this.chicken.position.x,
-        log.position.x - 2,
-        log.position.x + 2
-      );
-      return flag;
-    });
-
-    if (!isEmpty(intersects)) {
-      // intersects[0].add(this.chicken);
-    }
-  };
-
-  generateLanes = (currentLaneOfDuck) => {
-    // const eq = this.lanes.length / 2 - 2;
-    // const removedLanes = this.lanes.splice(0, eq);
-    // removedLanes.forEach((lane) => lane.dispose());
-    for (let i = 0; i < NUM_LANES_TO_BE; i++) {
-      const lane = new Lane({
-        position: new Vector3(0, 0, -(NUM_LANES_GENERATED * LANE_DEPTH)),
-        type: i === 0 ? LANE_TYPES.LAND : LANE_TYPES.WATER,
-      });
-      NUM_LANES_GENERATED = NUM_LANES_GENERATED + 1;
-      this.scene.add(lane);
-      this.lanes.push(lane);
-    }
-  };
+  onChickenJump = (direction) => {};
 }
+
+/**
+ * Sketch
+ */
 let sketch = null;
 window.addEventListener("load", () => {
   const canvasEl = document.querySelector("#canvas-container");
@@ -159,3 +173,36 @@ window.addEventListener("resize", () => {
   const height = window.innerHeight;
   sketch.onResize({ width, height });
 });
+
+const waterLaneGeom = new BoxBufferGeometry(20, 0.6, 10);
+const waterLaneMat = new MeshBasicMaterial({
+  color: 0x4361ee,
+});
+class WaterLane extends Mesh {
+  constructor() {
+    super(waterLaneGeom, waterLaneMat);
+  }
+}
+
+const waterLogGeom = new BoxBufferGeometry(8, 1, 8);
+const waterLogMat = new MeshBasicMaterial({
+  color: 0x774936,
+});
+
+class WaterLog extends Mesh {
+  constructor() {
+    super(waterLogGeom, waterLogMat);
+    this.initPhysics();
+  }
+
+  initPhysics = () => {
+    this.shape = new CANNON.Box(new CANNON.Vec3(4, 0.5, 4));
+    this.body = new CANNON.Body({
+      mass: 10.5,
+      type: CANNON.BODY_TYPES.STATIC,
+    });
+
+    this.body.addShape(this.shape);
+    this.body.name = "water-log";
+  };
+}

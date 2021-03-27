@@ -7,6 +7,8 @@
     "start": "webpack serve --config webpack/webpack.config.dev.js"
   },
   "dependencies": {
-    "animejs": "^3.2.1"
+    "animejs": "^3.2.1",
+    "cannon-es": "^0.17.0",
+    "cannon-es-debugger": "^0.1.2"
   }
 }
