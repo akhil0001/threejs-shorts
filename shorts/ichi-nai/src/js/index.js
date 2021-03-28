@@ -6,10 +6,8 @@ import {
   sRGBEncoding,
   OrthographicCamera,
   BoxBufferGeometry,
-  MeshLambertMaterial,
   Mesh,
   AxesHelper,
-  CanvasTexture,
   PCFSoftShadowMap,
   AmbientLight,
   FogExp2,
@@ -17,11 +15,12 @@ import {
 } from "three";
 import { GUI } from "dat.gui";
 import { addDesktopControls } from "../components/desktop-controls";
-import { COLORS, gameLevels } from "./config";
 import * as CANNON from "cannon-es";
 import cannonDebugger from "cannon-es-debugger";
 import { inRange, isNil, throttle } from "lodash";
 import anime from "animejs";
+import { Game } from "./game";
+import { Tile } from "./tile";
 
 class Sketch {
   constructor({ canvasEl }) {
@@ -30,14 +29,14 @@ class Sketch {
   }
 
   init = () => {
-    const scene = new Scene();
-    scene.background = new Color(0x272640);
+    this.scene = new Scene();
+    this.scene.background = new Color(0x272640);
 
     const aspectRatio = window.innerWidth / window.innerHeight;
 
     this.d = 40;
     this.removedTiles = [];
-    const camera = new OrthographicCamera(
+    this.camera = new OrthographicCamera(
       -this.d * aspectRatio,
       this.d * aspectRatio,
       this.d * 1,
@@ -45,26 +44,26 @@ class Sketch {
       0.1,
       10000
     );
-    camera.position.set(this.d, this.d, this.d);
-    scene.add(camera);
+    this.camera.position.set(this.d, this.d, this.d);
+    this.scene.add(this.camera);
 
-    const light = new DirectionalLight(0xffffff);
-    light.position.set(300, 300, 50);
-    light.castShadow = true;
+    this.light = new DirectionalLight(0xffffff);
+    this.light.position.set(300, 300, 50);
+    this.light.castShadow = true;
     // light.shadow.camera.near = 0.01;
     // light.shadow.camera.far = 10000;
 
-    scene.add(light);
+    this.scene.add(this.light);
 
     const ambientLight = new AmbientLight(0xf0f0f0, 0.5);
-    scene.add(ambientLight);
+    this.scene.add(ambientLight);
 
     const color = 0x101010;
     const density = 0.01;
-    scene.fog = new FogExp2(color, density);
+    // this.scene.fog = new FogExp2(color, density);
 
     const axesHelper = new AxesHelper(10);
-    scene.add(axesHelper);
+    this.scene.add(axesHelper);
 
     const renderer = new WebGLRenderer({
       antialias: true,
@@ -75,12 +74,10 @@ class Sketch {
     renderer.outputEncoding = sRGBEncoding;
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const { orbitControls } = addDesktopControls(camera, renderer);
-    this.camera = camera;
+    const { orbitControls } = addDesktopControls(this.camera, renderer);
     this.renderer = renderer;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.shadowMap.enabled = true;
-    this.scene = scene;
     this.tiles = [];
     this.initPhysics();
     this.orbitControls = orbitControls;
@@ -89,7 +86,6 @@ class Sketch {
     // cannonDebugger(scene, this.world.bodies);
     renderer.setAnimationLoop(this.update);
     this.tileCount = 0;
-    this.light = light;
   };
 
   initPhysics = () => {
@@ -99,34 +95,39 @@ class Sketch {
   };
 
   createGame = () => {
-    gameLevels.forEach((gameLevel) => {
-      this.character = new Character({ onJump: this.onJump });
-      const { blocks } = gameLevel;
-      blocks.forEach((block, index) => {
-        const { position, color, isOrigin, isDestination, weight } = block;
-        const tile = new Tile({
-          color,
-          isDestination,
-          isOrigin,
-        });
-        if (isOrigin) {
-          this.character.position.copy(position).setY(position.y + 4);
-        }
-        tile.name = "tile#" + index;
-        tile.weight = weight;
-        tile.body.name = "tile#" + index;
-        tile.isDestination = isDestination;
-        tile.position.copy(position);
-        tile.body.position.copy(position);
-        this.scene.add(tile);
-        this.world.addBody(tile.body);
-        this.tiles.push(tile);
-      });
-
-      this.world.addBody(this.character.body);
-      this.character.body.position.copy(this.character.position);
-      this.scene.add(this.character);
+    this.game = new Game({
+      afterLoadGameData: this.afterLoadGameData,
     });
+  };
+
+  afterLoadGameData = ({ data }) => {
+    this.character = new Character({ onJump: this.onJump });
+    console.log(data);
+    const { blocks } = data;
+    blocks.forEach((block, index) => {
+      const { position, color, isOrigin, isDestination, weight } = block;
+      const tile = new Tile({
+        color,
+        isDestination,
+        isOrigin,
+      });
+      if (isOrigin) {
+        this.character.position.copy(position).setY(position.y + 4);
+      }
+      tile.name = "tile#" + index;
+      tile.weight = weight;
+      tile.body.name = "tile#" + index;
+      tile.isDestination = isDestination;
+      tile.position.copy(position);
+      tile.body.position.copy(position);
+      this.scene.add(tile);
+      this.world.addBody(tile.body);
+      this.tiles.push(tile);
+    });
+
+    this.world.addBody(this.character.body);
+    this.character.body.position.copy(this.character.position);
+    this.scene.add(this.character);
   };
 
   addGround = () => {
@@ -174,6 +175,7 @@ class Sketch {
     }
   };
 }
+
 let sketch = null;
 window.addEventListener("load", () => {
   const canvasEl = document.querySelector("#canvas-container");
@@ -186,82 +188,6 @@ window.addEventListener("resize", () => {
   const height = window.innerHeight;
   sketch.onResize({ width, height });
 });
-
-const tileGeom = new BoxBufferGeometry(5, 2, 5);
-const tileMat = new MeshLambertMaterial({
-  color: 0xffffff,
-});
-
-const WEIGHT_COLORS = {
-  0: COLORS.BLACK,
-  1: COLORS.GREEN,
-  2: COLORS.DARK_GREEN,
-  3: COLORS.YELLOW,
-};
-
-const grassGeom = new BoxBufferGeometry(5, 0.4, 5);
-
-class Tile extends Mesh {
-  constructor({ color, isOrigin, isDestination }) {
-    super(tileGeom, tileMat);
-    this.castShadow = true;
-    this.weight = 0;
-    this.receiveShadow = true;
-    this.userData.color = color;
-    this.isDestination = false;
-    // this.addTexture();
-    this.addGrass();
-    this.addBody();
-  }
-
-  addBody = () => {
-    const shape = new CANNON.Box(new CANNON.Vec3(2.5, 1.2, 2.5));
-    const body = new CANNON.Body({
-      mass: 0,
-      type: CANNON.BODY_TYPES.DYNAMIC,
-    });
-    body.addShape(shape);
-    this.body = body;
-  };
-
-  addGrass = () => {
-    const grassMat = new MeshStandardMaterial({
-      color: this.userData.color,
-      // map: this.texture,
-    });
-    this.grass = new Mesh(grassGeom, grassMat);
-    this.grass.position.set(0, 1, 0);
-    this.grass.castShadow = true;
-    this.grass.receiveShadow = true;
-    this.add(this.grass);
-  };
-
-  addTexture = () => {
-    const canvasContext = document.createElement("canvas").getContext("2d");
-    canvasContext.canvas.width = 2048;
-    canvasContext.canvas.height = 2048;
-    // canvasContext.fillStyle = color;
-    // canvasContext.fill();
-
-    // canvasContext.fillRect(
-    //   0,
-    //   0,
-    //   canvasContext.canvas.width,
-    //   canvasContext.canvas.height
-    // );
-
-    this.texture = new CanvasTexture(canvasContext.canvas);
-    this.texture.needsUpdate = true;
-  };
-
-  updateWeight = () => {
-    if (this.isDestination) {
-      return;
-    }
-    this.grass.material.color = new Color(WEIGHT_COLORS[this.weight]);
-    this.grass.material.needsUpdate = true;
-  };
-}
 
 const characterGeom = new BoxBufferGeometry(2, 2, 2);
 const characterMat = new MeshStandardMaterial({
