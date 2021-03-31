@@ -20,6 +20,7 @@ import { FORCES, POSITIONS, WORLD_UPDATE_FREQUENCY, ZERO_MASS } from "./config";
 
 import "../styles.css";
 import { isNil } from "lodash";
+import { reduceTitleAndMoveItUp } from "./animation";
 
 class Sketch {
   constructor({ canvasEl }) {
@@ -182,7 +183,8 @@ function onWindowLoad() {
   const canvasEl = document.querySelector("#canvas-container");
   canvasEl.width = window.innerWidth;
   canvasEl.height = window.innerHeight;
-  // sketch = new Sketch({
-  //   canvasEl,
-  // });
+  reduceTitleAndMoveItUp();
+  sketch = new Sketch({
+    canvasEl,
+  });
 }

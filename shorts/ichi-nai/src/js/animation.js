@@ -1,16 +1,27 @@
 import anime from "animejs";
 
-const levelTitle = document.querySelector("#title");
+const levelEl = document.querySelector("#level");
+
+export function reduceTitleAndMoveItUp() {
+  anime.timeline().add({
+    targets: "#title",
+    top: "0%",
+    fontSize: "5vmax",
+    easing: "easeInOutQuad",
+    duration: 500,
+    delay: 1000,
+  });
+}
 
 export function showupLevel({ text, completeCb }) {
-  levelTitle.textContent = text;
-  levelTitle.innerHTML = levelTitle.textContent.replace(
+  levelEl.textContent = text;
+  levelEl.innerHTML = levelEl.textContent.replace(
     /\S/g,
     "<span class='letter'>$&</span>"
   );
 
   anime.timeline().add({
-    targets: "#title .letter",
+    targets: "#level .letter",
     opacity: [0, 1],
     easing: "easeInOutQuad",
     duration: 2250,
