@@ -1,10 +1,11 @@
+import { showupLevel } from "./animation";
 import { gameLevels } from "./config";
 
 export class Game {
   constructor({ afterLoadGameData }) {
-    this.level = 1;
+    this.level = 0;
     this.afterLoadGameData = afterLoadGameData;
-    this.loadGameData();
+    this.incrementLevel();
   }
 
   loadGameData = () => {
@@ -16,6 +17,13 @@ export class Game {
 
   incrementLevel = () => {
     this.level++;
+    showupLevel({
+      text: `Level ${this.level}`,
+      completeCb: this.loadGameData.bind(this),
+    });
+  };
+
+  resetLevel = () => {
     this.loadGameData();
   };
 }
