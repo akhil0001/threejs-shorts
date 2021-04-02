@@ -11,6 +11,20 @@ export const COLORS = {
 
 export const gameLevels = [
   {
+    level: 0,
+    tiles: [
+      {
+        position: [0, 0, 0],
+      },
+      {
+        position: [-1, 0, 0],
+      },
+      {
+        position: [0, 0, -1],
+      },
+    ],
+  },
+  {
     level: 1,
     tiles: [
       {
@@ -94,8 +108,11 @@ export const FORCES = {
   DROP_FORCE: [-90, -10, -90],
 };
 
+export const HEIGHT_FROM_FLOOR = 5;
+
 export const POSITIONS = {
   GROUND: [0, -80, 0],
+  SPACE_INTRO: [0, HEIGHT_FROM_FLOOR * 2, 0],
 };
 
 export const ZERO_MASS = 0;
@@ -103,4 +120,9 @@ export const WORLD_UPDATE_FREQUENCY = 1 / 60;
 
 export const EPSILON = 0.1;
 export const WIDTH = 5 + EPSILON;
-export const HEIGHT_FROM_FLOOR = 5;
+export const SHOULD_ANIMATION_PLAY = false;
+
+export const ANIMATION_TIMINGS = {
+  TILES_FROM_GROUND_STAGGER: 200,
+  TILES_FROM_GROUND_DURATION: 2000,
+};

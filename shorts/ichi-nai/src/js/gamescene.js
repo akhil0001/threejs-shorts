@@ -1,8 +1,10 @@
+import anime from "animejs";
 import { get } from "lodash";
 import { Vector3 } from "three";
-import { Character } from "./character";
+import { getTilesFromGround } from "./animation";
 import { DIMENSIONS, HEIGHT_FROM_FLOOR } from "./config";
 import { Tile } from "./tile";
+import { adjustTileBodyPosition } from "./utils";
 
 export const LEVEL_STATUS = {
   PLAYING: "playing",
@@ -15,9 +17,10 @@ const mulVec = new Vector3(DIMENSIONS.TILE[0], 1, DIMENSIONS.TILE[2]);
 const addVec = new Vector3(0, HEIGHT_FROM_FLOOR, 0);
 
 export class GameScene {
-  constructor({ scene, world, onLevelDone, onLevelReset }) {
+  constructor({ scene, world, character, onLevelDone, onLevelReset }) {
     this.scene = scene;
     this.world = world;
+    this.character = character;
     this.originTile = null;
     this.destinationTile = null;
     this.onLevelDone = onLevelDone;
@@ -35,6 +38,7 @@ export class GameScene {
         index,
       });
     });
+
     this.addCharaterToScene({ position: this.originTile.position });
   };
 
@@ -68,9 +72,7 @@ export class GameScene {
     tile.body.sceneIndex = index;
     tile.body.mass = 0;
     // to adjust for grass
-    const tempVec = posVec
-      .clone()
-      .add(new Vector3(0, DIMENSIONS.GRASS[1] / 4, 0));
+    const tempVec = adjustTileBodyPosition({ posVec });
     tile.body.position.copy(tempVec);
     tile.originalPosition = tempVec.clone();
     this.world.addBody(tile.body);
@@ -88,27 +90,48 @@ export class GameScene {
   addCharaterToScene = ({ position }) => {
     const highVector = new Vector3(0, 5, 0);
     const newPosition = position.clone().add(highVector);
-    this.character = new Character({
-      onJump: this.onCharacterjump,
-      position: newPosition,
-    });
-    this.character.position.copy(newPosition);
+    this.moveCharacter({ to: newPosition });
+    this.character.onJump = this.onCharacterjump;
+    this.currentTileIndex = this.originTile.sceneIndex;
     this.scene.add(this.character);
     this.character.body.position.copy(newPosition);
     this.world.addBody(this.character.body);
+  };
+
+  moveCharacter = ({ to }) => {
+    anime({
+      targets: this.character.body.position,
+      z: to.z,
+      y: to.y,
+      x: to.x,
+      easing: "linear",
+      duration: 1000,
+      complete: () => {
+        this.character.originalPosition = to.clone();
+        this.character.body.mass = 10;
+        this.character.body.updateMassProperties();
+        this.character.toggleMagicalSphereVisibility({ flag: false });
+      },
+    });
   };
 
   update = () => {
     this.tiles.forEach((tile) => tile.update());
     this.character.update();
     if (
-      (this.character.position.y < HEIGHT_FROM_FLOOR &&
-        this.status !== LEVEL_STATUS.FAIL) ||
-      (this.isDestinationReachedWithoutCompletingAllTiles() &&
-        this.status !== LEVEL_STATUS.FAIL)
+      this.character.position.y < HEIGHT_FROM_FLOOR &&
+      this.status !== LEVEL_STATUS.FAIL
     ) {
       this.status = LEVEL_STATUS.FAIL;
       this.resetScene();
+    }
+    if (
+      this.isDestinationReachedWithoutCompletingAllTiles() &&
+      this.status !== LEVEL_STATUS.FAIL
+    ) {
+      this.status = LEVEL_STATUS.FAIL;
+      this.notifyUserAboutMissedTiles();
+      // this.resetScene();
     }
     if (this.checkIfLevelIsComplete() && this.status !== LEVEL_STATUS.DONE) {
       this.status = LEVEL_STATUS.DONE;
@@ -122,6 +145,16 @@ export class GameScene {
       return this.tiles.length - 1 !== this.removedTiles.length;
     }
     return false;
+  };
+
+  notifyUserAboutMissedTiles = () => {
+    const missedTiles = this.tiles.filter(
+      (tile) => !this.removedTiles.includes(tile) && !tile.isDestination
+    );
+    Tile.notifyUserAboutMiss({
+      missedTiles: missedTiles.map((tile) => tile.body.position),
+      completeCb: () => this.resetScene(),
+    });
   };
 
   onCharacterjump = (tileIndex) => {
@@ -142,6 +175,7 @@ export class GameScene {
 
   checkIfLevelIsComplete = () => {
     if (
+      this.destinationTile &&
       this.destinationTile.sceneIndex === this.character.currentTileIndex &&
       this.removedTiles.length === this.tiles.length - 1
     ) {

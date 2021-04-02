@@ -1,26 +1,24 @@
-import {
-  Scene,
-  Color,
-  DirectionalLight,
-  WebGLRenderer,
-  sRGBEncoding,
-  OrthographicCamera,
-  AxesHelper,
-  PCFSoftShadowMap,
-  AmbientLight,
-  FogExp2,
-} from "three";
-import { GUI } from "dat.gui";
-import { addDesktopControls } from "../components/desktop-controls";
 import * as CANNON from "cannon-es";
 import cannonDebugger from "cannon-es-debugger";
+import { GUI } from "dat.gui";
+import { isNil } from "lodash";
+import {
+  AmbientLight,
+  AxesHelper,
+  DirectionalLight,
+  OrthographicCamera,
+  PCFSoftShadowMap,
+  Scene,
+  sRGBEncoding,
+  WebGLRenderer,
+} from "three";
+import { addDesktopControls } from "../components/desktop-controls";
+import "../styles/index.css";
+import { reduceTitleAndMoveItUp } from "./animation";
+import { FORCES, POSITIONS, WORLD_UPDATE_FREQUENCY, ZERO_MASS } from "./config";
 import { Game } from "./game";
 import { GameScene } from "./gamescene";
-import { FORCES, POSITIONS, WORLD_UPDATE_FREQUENCY, ZERO_MASS } from "./config";
-
-import "../styles.css";
-import { isNil } from "lodash";
-import { reduceTitleAndMoveItUp } from "./animation";
+import { Intro } from "./intro";
 
 class Sketch {
   constructor({ canvasEl }) {
@@ -29,13 +27,17 @@ class Sketch {
   }
 
   init = () => {
+    console.log("hello three js");
     this.scene = new Scene();
     this.addCamera();
     this.addLights();
     this.createRenderer();
     this.initPhysics();
-    this.createGame();
     this.addDebugHelpers();
+    this.intro = new Intro({
+      scene: this.scene,
+      world: this.world,
+    });
 
     this.renderer.setAnimationLoop(this.update);
   };
@@ -93,9 +95,7 @@ class Sketch {
 
     const { orbitControls } = addDesktopControls(this.camera, this.renderer);
     this.orbitControls = orbitControls;
-    // cannonDebugger(this.scene, this.world.bodies, {
-    //   color: 0x101010,
-    // });
+    // cannonDebugger(this.scene, this.world.bodies, {});
 
     this.debugGUI = new GUI();
   };
@@ -106,11 +106,12 @@ class Sketch {
     this.addGround();
   };
 
-  createGame = () => {
+  createGame = (character) => {
     // scene first , data next
     this.gameScene = new GameScene({
       scene: this.scene,
       world: this.world,
+      character: character,
       onLevelDone: this.onLevelDone,
       onLevelReset: this.onResetLevel,
     });
@@ -145,7 +146,9 @@ class Sketch {
   update = () => {
     this.orbitControls.update();
     this.world.step(WORLD_UPDATE_FREQUENCY);
-    if (this.gameScene.character) {
+    this.intro.update();
+    // TODO: add the rAFCallBack principle here
+    if (this.gameScene && this.gameScene.character) {
       this.gameScene.update();
     }
     this.renderer.render(this.scene, this.camera);
@@ -164,10 +167,6 @@ class Sketch {
 
 let sketch = null;
 window.addEventListener("load", () => {
-  // const canvasEl = document.querySelector("#canvas-container");
-  // sketch = new Sketch({
-  //   canvasEl,
-  // });
   onWindowLoad();
 });
 window.addEventListener("resize", () => {
@@ -183,8 +182,16 @@ function onWindowLoad() {
   const canvasEl = document.querySelector("#canvas-container");
   canvasEl.width = window.innerWidth;
   canvasEl.height = window.innerHeight;
-  reduceTitleAndMoveItUp();
+  // reduceTitleAndMoveItUp();
+  // addPlayButton();
+  const playBtn = document.querySelector(".play-btn");
   sketch = new Sketch({
     canvasEl,
   });
+  if (!isNil(playBtn)) {
+    playBtn.addEventListener("click", () => {
+      reduceTitleAndMoveItUp();
+      sketch.intro.dispose((character) => sketch.createGame(character));
+    });
+  }
 }

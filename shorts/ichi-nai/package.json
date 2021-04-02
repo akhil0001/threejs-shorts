@@ -10,5 +10,8 @@
     "cannon-es": "^0.17.0",
     "cannon-es-debugger": "^0.1.2",
     "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "file-loader": "^6.2.0"
   }
 }

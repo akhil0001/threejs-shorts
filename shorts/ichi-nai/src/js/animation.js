@@ -1,12 +1,13 @@
 import anime from "animejs";
+import { ANIMATION_TIMINGS, POSITIONS, SHOULD_ANIMATION_PLAY } from "./config";
 
-const levelEl = document.querySelector("#level");
+const levelEl = document.querySelector(".level");
 
 export function reduceTitleAndMoveItUp() {
   anime.timeline().add({
-    targets: "#title",
+    targets: ".title",
     top: "0%",
-    fontSize: "5vmax",
+    fontSize: "2vmax",
     easing: "easeInOutQuad",
     duration: 500,
     delay: 1000,
@@ -14,6 +15,9 @@ export function reduceTitleAndMoveItUp() {
 }
 
 export function showupLevel({ text, completeCb }) {
+  if (SHOULD_ANIMATION_PLAY) {
+    completeCb();
+  }
   levelEl.textContent = text;
   levelEl.innerHTML = levelEl.textContent.replace(
     /\S/g,

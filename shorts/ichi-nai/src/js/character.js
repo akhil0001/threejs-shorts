@@ -23,9 +23,15 @@ const sphereMat = new MeshLambertMaterial({
 });
 
 export class Character extends Mesh {
-  constructor({ position, onJump }) {
+  constructor({
+    position,
+    onJump,
+    currentTileIndex,
+    isSpaceBubbleVisible = false,
+  }) {
     super(characterGeom, characterMat);
-    this.currentTileIndex = null;
+    this.currentTileIndex = currentTileIndex;
+    this.isSpaceBubbleVisible = isSpaceBubbleVisible;
     this.prevTileIndex = null;
     this.originalPosition = position.clone();
     this.addBody();
@@ -91,7 +97,12 @@ export class Character extends Mesh {
   addMagicalSphere = () => {
     this.sphere = new Mesh(sphereGeom, sphereMat);
     this.add(this.sphere);
-    this.sphere.visible = false;
+    this.sphere.visible = this.isSpaceBubbleVisible;
+  };
+
+  toggleMagicalSphereVisibility = ({ flag }) => {
+    this.isSpaceBubbleVisible = flag;
+    this.sphere.visible = flag;
   };
 
   jump = ({ axis, distance }) => {
@@ -167,6 +178,32 @@ export class Character extends Mesh {
         this.body.updateMassProperties();
         onSuccessCb();
       },
+    });
+  };
+
+  float = () => {
+    this.floatAnime = anime({
+      targets: this.body.position,
+      keyframes: [
+        {
+          y: this.body.position.y,
+        },
+        {
+          y: this.body.position.y + 0.8,
+        },
+        {
+          y: this.body.position.y,
+        },
+        {
+          y: this.body.position.y - 0.8,
+        },
+        {
+          y: this.body.position.y,
+        },
+      ],
+      loop: true,
+      duration: 5000,
+      easing: "linear",
     });
   };
 

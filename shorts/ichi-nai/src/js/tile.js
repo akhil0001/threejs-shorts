@@ -8,8 +8,15 @@ import {
 } from "three";
 import * as CANNON from "cannon-es";
 
-import { COLORS, DIMENSIONS, EPSILON, FORCES } from "./config";
+import {
+  COLORS,
+  DIMENSIONS,
+  EPSILON,
+  FORCES,
+  HEIGHT_FROM_FLOOR,
+} from "./config";
 import anime from "animejs";
+import { adjustTileBodyPosition } from "./utils";
 
 const { TILE, GRASS } = DIMENSIONS;
 
@@ -18,6 +25,7 @@ const tileGeom = new BoxBufferGeometry(
   TILE[1],
   TILE[2] - EPSILON
 );
+
 const grassGeom = new BoxBufferGeometry(
   GRASS[0] - EPSILON,
   GRASS[1],
@@ -46,6 +54,7 @@ export class Tile extends Mesh {
     this.isOrigin = isOrigin;
     this.sceneIndex = 0;
     this.originalPosition = originalPosition.clone();
+    // this.position.copy(this.originalPosition);
     this.userData.color = WEIGHT_COLORS[weight];
     this._tempVec = new Vector3();
     this._subVec = new Vector3(0, GRASS[1] / 2, 0);
@@ -138,6 +147,30 @@ export class Tile extends Mesh {
       this.grass.material.color = new Color(COLORS.ORANGE);
     } else this.grass.material.color = new Color(WEIGHT_COLORS[this.weight]);
     this.grass.material.needsUpdate = true;
+  };
+
+  static notifyUserAboutMiss = ({ missedTiles, completeCb }) => {
+    const { y } = adjustTileBodyPosition({
+      posVec: new Vector3(0, HEIGHT_FROM_FLOOR, 0),
+    });
+    anime({
+      targets: [...missedTiles],
+      keyframes: [
+        {
+          y,
+        },
+        {
+          y: y - 2,
+        },
+        {
+          y,
+        },
+      ],
+      duration: 1000,
+      easing: "easeInOutQuad",
+      delay: anime.stagger(100),
+      complete: completeCb,
+    });
   };
 
   update = () => {
