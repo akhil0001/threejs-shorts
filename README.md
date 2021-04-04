@@ -3,6 +3,27 @@
 - This is not any form of library or tutorial.
 
 
+## Shorts
+
+### [Cuboid Loader](/shorts/cuboid-loader/README.md)
+- This is a simple cuboid loader built using simple Math
+- Live Link: [codepen](https://codepen.io/akhil_001/pen/MWbdebX)
+- Stack: `anime.js`, `three.js`
+
+### [Snowman](shorts/snowman/README.md)
+- This is an infinite snowman building animation that simply explores `Group` and shadows
+- Live Link: [codepen](https://codepen.io/akhil_001/pen/yLVXGyq)
+- Stack: `anime.js`, `three.js`, `lodash`
+
+### [Hello-Shaders](shorts/hello-shaders/README.md)
+- As name suggests, this is basic hello world of shaders which is frequently updated as I learn more about GLSL and shaders
+- Stack: `GLSL`
+
+### Ichi-ni
+- A puzzle game [*work in progress*]
+- Explores physics engines and collisions, keyframes in animations
+- Stack: `cannon.js`, `three.js` , `anime.js`
+
 ## Libraries Used
 1. `three.js`
 2. `anime.js`
