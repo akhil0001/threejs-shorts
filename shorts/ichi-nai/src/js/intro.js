@@ -9,20 +9,23 @@ import {
   FORCES,
 } from "./config";
 import { Tile } from "./tile";
+import { isNil } from "lodash";
+import { GAME_STATES } from "./game-interface";
+import { GameStateInstanceInterface } from "./interface";
+import { changePlayToRedoBtn, reduceTitleAndMoveItUp } from "./animation";
 
 const tempVec = new Vector3();
 const mulVec = new Vector3(DIMENSIONS.TILE[0], 0, DIMENSIONS.TILE[2]);
 const addVec = new Vector3(0, -HEIGHT_FROM_FLOOR, 0);
-export class Intro {
-  constructor({ scene, world }) {
-    this.scene = scene;
-    this.world = world;
+export class Intro extends GameStateInstanceInterface {
+  constructor({ scene, world, changeGameState, data }) {
+    super({ scene, world, changeGameState, data });
     this.levelData = null;
     this.tiles = [];
-    this.init();
+    this._init();
   }
 
-  init = () => {
+  _init = () => {
     this.character = new Character({
       position: new Vector3(...POSITIONS.SPACE_INTRO),
       onJump: () => {},
@@ -37,15 +40,16 @@ export class Intro {
     this.character.float();
     this.scene.add(this.character);
     this.world.addBody(this.character.body);
-    this.getIntroLevelData();
-    this.buildTiles();
+    this._getIntroLevelData();
+    this._buildTiles();
+    this._addEventListenerToPlayBtn();
   };
 
-  getIntroLevelData = () => {
+  _getIntroLevelData = () => {
     this.levelData = gameLevels.filter(({ level }) => level === 0)[0];
   };
 
-  buildTiles = () => {
+  _buildTiles = () => {
     this.levelData.tiles.forEach(({ position }, index) => {
       const posVec = tempVec
         .clone()
@@ -66,12 +70,34 @@ export class Intro {
     });
   };
 
+  _addEventListenerToPlayBtn = () => {
+    this._playBtn = document.querySelector(".play-btn");
+    if (isNil(this._playBtn)) {
+      console.warn("could not access the play button");
+      return this._playBtn;
+    }
+    this._playBtn.addEventListener("click", () => {
+      this.changeGameState({
+        state: GAME_STATES.PLAY,
+        data: {
+          character: this.character,
+        },
+      });
+    });
+  };
+
   update = () => {
     this.tiles.forEach((tile) => tile.update());
     this.character.update();
   };
 
-  dispose = (cb) => {
+  onExit = () => {
+    reduceTitleAndMoveItUp();
+    changePlayToRedoBtn();
+    this._dispose();
+  };
+
+  _dispose = () => {
     this.tiles.forEach((tile, index) => {
       tile.body.mass = 1;
       tile.body.applyForce(
@@ -83,7 +109,7 @@ export class Intro {
       );
       tile.body.updateMassProperties();
     });
+
     this.character.floatAnime.pause();
-    cb(this.character);
   };
 }

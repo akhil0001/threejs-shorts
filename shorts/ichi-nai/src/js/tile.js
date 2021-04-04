@@ -14,6 +14,7 @@ import {
   EPSILON,
   FORCES,
   HEIGHT_FROM_FLOOR,
+  POSITIONS,
 } from "./config";
 import anime from "animejs";
 import { adjustTileBodyPosition } from "./utils";
@@ -47,8 +48,8 @@ export class Tile extends Mesh {
   constructor({ weight, isOrigin, isDestination, originalPosition }) {
     super(tileGeom, tileMat);
     this.castShadow = true;
-    this.originalWeight = weight;
-    this.weight = 0;
+    this._originalWeight = weight;
+    this.weight = weight;
     this.receiveShadow = true;
     this.isDestination = isDestination;
     this.isOrigin = isOrigin;
@@ -63,6 +64,27 @@ export class Tile extends Mesh {
     this.addGrass();
     this.addBody();
   }
+
+  updateInfo = ({ weight, position, bodyMass, bodyPos, sceneIndex, delay }) => {
+    this.sceneIndex = sceneIndex;
+    this.body.sceneIndex = sceneIndex;
+    this._originalWeight = weight; // this is not related to mass instead the number of times to jump to make it to 1; // TODO: Change the name of variable
+    this.weight = weight;
+    // this.position.copy(position);
+    this.body.mass = bodyMass;
+    // this.body.position.copy(bodyPos);
+    this.body.updateMassProperties();
+    this.originalPosition.copy(bodyPos);
+    anime({
+      targets: this.body.position,
+      y: bodyPos.y,
+      x: bodyPos.x,
+      z: bodyPos.z,
+      duration: 1000,
+      delay,
+      easing: "linear",
+    });
+  };
 
   assignColors = () => {
     if (this.isOrigin || this.isDestination) {
@@ -84,6 +106,7 @@ export class Tile extends Mesh {
     });
     body.addShape(shape);
     this.body = body;
+    this.body.position.copy(new CANNON.Vec3(...POSITIONS.GROUND));
   };
 
   addGrass = () => {
@@ -145,7 +168,10 @@ export class Tile extends Mesh {
     }
     if (this.isOrigin) {
       this.grass.material.color = new Color(COLORS.ORANGE);
-    } else this.grass.material.color = new Color(WEIGHT_COLORS[this.weight]);
+    } else
+      this.grass.material.color = new Color(
+        WEIGHT_COLORS[this._originalWeight]
+      );
     this.grass.material.needsUpdate = true;
   };
 
@@ -192,7 +218,7 @@ export class Tile extends Mesh {
       y: y,
       x: x,
       z: z,
-      duration: 1500,
+      duration: 2000,
       easing: "linear",
       delay,
     });
@@ -201,7 +227,7 @@ export class Tile extends Mesh {
       x: 0,
       y: 0,
       z: 0,
-      duration: 1500,
+      duration: 2000,
       easing: "linear",
       delay,
     });
@@ -209,7 +235,7 @@ export class Tile extends Mesh {
     this.body.updateMassProperties();
     this.body.velocity.set(0, 0, 0);
     this.body.angularVelocity.set(0, 0, 0);
-    this.weight = this.originalWeight;
+    this.weight = this._originalWeight;
     this.updateWeightColor();
   };
 

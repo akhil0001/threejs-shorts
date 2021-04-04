@@ -112,7 +112,7 @@ export const HEIGHT_FROM_FLOOR = 5;
 
 export const POSITIONS = {
   GROUND: [0, -80, 0],
-  SPACE_INTRO: [0, HEIGHT_FROM_FLOOR * 2, 0],
+  SPACE_INTRO: [0, HEIGHT_FROM_FLOOR * 3, 0],
 };
 
 export const ZERO_MASS = 0;

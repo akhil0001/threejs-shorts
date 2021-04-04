@@ -40,8 +40,11 @@ export class Character extends Mesh {
     this.isJumping = false;
     this.isTileDropped = false;
     this.isFalling = false;
-    this.throttledJump = throttle(this.jump, 500, { trailing: false });
+    this.throttledJump = throttle(this.jump.bind(this), 500, {
+      trailing: false,
+    });
     this.onJump = onJump;
+    this.addEyes();
     window.addEventListener("keyup", (event) => {
       const { key } = event;
       if (["ArrowLeft", "a", "A"].includes(key)) {
@@ -70,6 +73,15 @@ export class Character extends Mesh {
       }
     });
   }
+
+  addEyes = () => {
+    const eyeOne = new Eye();
+    const eyeTwo = new Eye();
+    eyeOne.position.set(1, 0.2, 0.8);
+    eyeTwo.position.set(1, 0.2, -0.8);
+
+    this.add(eyeOne, eyeTwo);
+  };
 
   addBody = () => {
     this.body = new CANNON.Body({
@@ -155,7 +167,7 @@ export class Character extends Mesh {
       targets: this.body.position,
       keyframes: [
         {
-          y: this.originalPosition.y + 3,
+          y: this.originalPosition.y + 2,
           z: this.originalPosition.z,
           x: this.originalPosition.x,
         },
@@ -166,7 +178,7 @@ export class Character extends Mesh {
         },
       ],
 
-      duration: 1000,
+      duration: 2000,
       easing: "linear",
       complete: () => {
         this.sphere.visible = false;
@@ -182,6 +194,7 @@ export class Character extends Mesh {
   };
 
   float = () => {
+    this.toggleMagicalSphereVisibility({ flag: true });
     this.floatAnime = anime({
       targets: this.body.position,
       keyframes: [
@@ -192,17 +205,15 @@ export class Character extends Mesh {
           y: this.body.position.y + 0.8,
         },
         {
-          y: this.body.position.y,
-        },
-        {
           y: this.body.position.y - 0.8,
-        },
-        {
-          y: this.body.position.y,
         },
       ],
       loop: true,
+      direction: "alternate",
       duration: 5000,
+      update: () => {
+        this.body.quaternion.y -= 0.01;
+      },
       easing: "linear",
     });
   };
@@ -212,4 +223,15 @@ export class Character extends Mesh {
     this.geometry.dispose();
     this.material.dispose();
   };
+}
+
+const eyeGeom = new BoxBufferGeometry(0.2, 0.8, 0.8);
+const eyeMat = new MeshLambertMaterial({
+  color: COLORS.WHITE,
+});
+
+class Eye extends Mesh {
+  constructor() {
+    super(eyeGeom, eyeMat);
+  }
 }

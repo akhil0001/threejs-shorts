@@ -47,9 +47,20 @@ body {
     align-items: center;
     justify-content: space-around;
     flex-flow: row;
-   margin-top: auto;
+    margin-top: auto;
 }
 
 .btn {
     cursor: pointer;
+    background: transparent;
+    border: 1px dashed aliceblue;
+    font-family: 'Amatic SC', sans-serif;
+    font-size: 3vmax;
+    color: aliceblue;
+    padding:10px 20px;
+}
+
+.reset-btn {
+    cursor:not-allowed;
+    opacity: 0.5;
 }

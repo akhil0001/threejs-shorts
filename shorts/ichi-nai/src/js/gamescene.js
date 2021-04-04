@@ -24,6 +24,7 @@ export class GameScene {
     this.originTile = null;
     this.destinationTile = null;
     this.onLevelDone = onLevelDone;
+    console.log(onLevelDone);
     this.onLevelReset = onLevelReset;
     this.tiles = [];
     this.removedTiles = [];
@@ -32,6 +33,7 @@ export class GameScene {
 
   loadGameScene = ({ gameData }) => {
     const { tiles } = gameData;
+    console.log(tiles);
     tiles.forEach((tile, index) => {
       this.addTileToScene({
         data: tile,
@@ -39,7 +41,7 @@ export class GameScene {
       });
     });
 
-    this.addCharaterToScene({ position: this.originTile.position });
+    this.addCharaterToScene({ position: this.originTile.originalPosition });
   };
 
   addTileToScene = ({ data, index }) => {
@@ -59,22 +61,17 @@ export class GameScene {
       isOrigin,
       originalPosition: posVec,
     });
-    /**
-     * three.js scene related
-     */
-    tile.sceneIndex = index;
-    tile.weight = weight; // this is not related to mass instead the number of times to jump to make it to 1; // TODO: Change the name of variable
-    tile.position.copy(posVec);
-    this.scene.add(tile);
-    /**
-     * cannon.js realated
-     */
-    tile.body.sceneIndex = index;
-    tile.body.mass = 0;
-    // to adjust for grass
     const tempVec = adjustTileBodyPosition({ posVec });
-    tile.body.position.copy(tempVec);
-    tile.originalPosition = tempVec.clone();
+    tile.updateInfo({
+      weight,
+      position: posVec,
+      bodyPos: tempVec,
+      sceneIndex: index,
+      bodyMass: 0,
+      delay: index * 100,
+    });
+    this.scene.add(tile);
+
     this.world.addBody(tile.body);
 
     if (isOrigin) {
@@ -88,17 +85,17 @@ export class GameScene {
   };
 
   addCharaterToScene = ({ position }) => {
-    const highVector = new Vector3(0, 5, 0);
+    this.character.floatAnime.pause();
+    const highVector = new Vector3(0, 3, 0);
+    this.character.currentTileIndex = this.originTile.sceneIndex;
     const newPosition = position.clone().add(highVector);
     this.moveCharacter({ to: newPosition });
     this.character.onJump = this.onCharacterjump;
-    this.currentTileIndex = this.originTile.sceneIndex;
-    this.scene.add(this.character);
-    this.character.body.position.copy(newPosition);
-    this.world.addBody(this.character.body);
   };
 
   moveCharacter = ({ to }) => {
+    this.character.body.mass = 10;
+    this.character.body.updateMassProperties();
     anime({
       targets: this.character.body.position,
       z: to.z,
@@ -106,10 +103,9 @@ export class GameScene {
       x: to.x,
       easing: "linear",
       duration: 1000,
+      delay: 2500,
       complete: () => {
         this.character.originalPosition = to.clone();
-        this.character.body.mass = 10;
-        this.character.body.updateMassProperties();
         this.character.toggleMagicalSphereVisibility({ flag: false });
       },
     });
@@ -135,7 +131,7 @@ export class GameScene {
     }
     if (this.checkIfLevelIsComplete() && this.status !== LEVEL_STATUS.DONE) {
       this.status = LEVEL_STATUS.DONE;
-      this.cleanup(this.onLevelDone);
+      this.cleanup();
     }
   };
 
@@ -192,6 +188,8 @@ export class GameScene {
     });
     this.removedTiles.forEach((tile, index) => {
       tile.restorePosition({ delay: index * 50 });
+      tile.body.mass = 0;
+      tile.body.updateMassProperties();
     });
     this.removedTiles = [];
   };
@@ -199,21 +197,20 @@ export class GameScene {
   cleanup = (cb) => {
     this.destinationTile.body.mass = 1;
     this.destinationTile.body.updateMassProperties();
-    this.character.body.mass = 10;
-    this.character.body.updateMassProperties();
     this.tiles.forEach((tile) => {
       tile.body.mass = 1;
       tile.body.updateMassProperties();
     });
+    this.character.float();
     this.tiles.forEach((tile) => {
       tile.dispose();
       this.world.removeBody(tile.body);
     });
-    this.character.dispose();
-    this.world.removeBody(this.character.body);
     this.tiles = [];
     this.removedTiles = [];
-    cb();
+    console.log("cleanup");
+    console.log(this.onLevelDone);
+    this.onLevelDone();
   };
 
   removeTileFromScene = () => {};
