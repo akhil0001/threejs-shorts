@@ -1,0 +1,66 @@
+@import './btn-icons.css';
+
+body {
+    overflow: hidden;
+    margin: 0px;
+    font-family: 'Amatic SC', sans-serif;
+}
+
+#canvas-container {
+    background: #141E30;
+    /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #243B55, #141E30);
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #243B55, #141E30);
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.game-overlay {
+    position: absolute;
+    left:0px;
+    top:0px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
+.flex {
+    display: flex;
+    flex-flow: column;
+}
+
+.title {
+    color: aliceblue;
+    font-size:5vmax;
+    margin-bottom: 5px;
+}
+
+.level {
+    color:aliceblue;
+    font-size: 2vmax;
+    margin:0px;
+}
+
+.btn-container {
+    width:80%;
+    height:20%;
+    align-items: center;
+    justify-content: space-around;
+    flex-flow: row;
+    margin-top: auto;
+}
+
+.btn {
+    cursor: pointer;
+    background: transparent;
+    border: 1px dashed aliceblue;
+    font-family: 'Amatic SC', sans-serif;
+    font-size: 3vmax;
+    color: aliceblue;
+    padding:10px 20px;
+}
+
+.reset-btn {
+    cursor:not-allowed;
+    opacity: 0.5;
+}
